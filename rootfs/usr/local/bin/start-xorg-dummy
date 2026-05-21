@@ -210,7 +210,15 @@ nvidia_xorg_module_path() {
   local driver
   driver="$(find /usr /run/nvidia/driver -type f -name nvidia_drv.so -print 2>/dev/null | head -n1 || true)"
   if [ -n "$driver" ]; then
-    dirname "$driver"
+    local driver_dir
+    local module_dir
+    driver_dir="$(dirname "$driver")"
+    module_dir="$(dirname "$driver_dir")"
+    if [ "$(basename "$driver_dir")" = "drivers" ]; then
+      printf '%s\n' "$module_dir"
+    else
+      printf '%s\n' "$driver_dir"
+    fi
   fi
 }
 

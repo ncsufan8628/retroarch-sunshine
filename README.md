@@ -76,6 +76,7 @@ Set `SUNSHINE_ENCODER=nvenc` to force NVIDIA video encoding. The container also 
 `auto` is the default and starts a headless NVIDIA-backed Xorg server when `nvidia_drv.so` is visible in the container, otherwise it falls back to the dummy Xorg driver.
 Use `XORG_DRIVER=nvidia` if you want startup to fail instead of silently falling back when GPU-backed Xorg is not available.
 The startup script discovers the directory containing `nvidia_drv.so` at runtime, which is helpful on hosts where the NVIDIA Container Toolkit mounts the driver under `/run/nvidia/driver`.
+If the driver is under a `drivers` subdirectory such as `/usr/lib64/xorg/modules/drivers/nvidia_drv.so`, the container uses the parent Xorg module directory so NVIDIA GLX extensions can be found too.
 
 To confirm Xorg rendering is GPU-backed rather than Mesa software rendering, run:
 
@@ -138,7 +139,7 @@ The container waits for the Xorg display to become queryable before starting Sun
 
 Also make sure `SUNSHINE_ENCODER` is added as a Variable, not a Label. In Unraid's generated command it should appear as `-e 'SUNSHINE_ENCODER'='nvenc'`, not `-l 'SUNSHINE_ENCODER'='nvenc'`.
 For NVIDIA-backed Xorg rendering, also add `XORG_DRIVER=nvidia` as a Variable. In Unraid's generated command it should appear as `-e 'XORG_DRIVER'='nvidia'`.
-If Xorg falls back to the generic `modesetting` driver and logs `drmSetMaster failed: Permission denied`, add `--cap-add=SYS_ADMIN` to Extra Parameters or test with `--privileged`.
+If NVIDIA Xorg logs `Failed to acquire modesetting permission` or generic modesetting logs `drmSetMaster failed: Permission denied`, add `--cap-add=SYS_ADMIN` to Extra Parameters or test with `--privileged`.
 
 If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:
 
