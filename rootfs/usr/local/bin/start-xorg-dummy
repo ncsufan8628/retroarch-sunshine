@@ -68,10 +68,13 @@ EOF
 
 write_nvidia_config() {
   local bus_id_section=""
+  local nvidia_driver_path
   local nvidia_module_path
-  nvidia_module_path="$(nvidia_xorg_module_path || true)"
+  nvidia_driver_path="$(nvidia_xorg_driver_path || true)"
+  nvidia_module_path="$(nvidia_xorg_module_path "$nvidia_driver_path")"
   if [ -z "$nvidia_module_path" ]; then
     echo "NVIDIA Xorg driver nvidia_drv.so was not found in the container" >&2
+    log_nvidia_xorg_candidates >&2
     exit 1
   fi
 
@@ -128,6 +131,10 @@ EndSection
 
 $(write_input_config)
 EOF
+
+  cp /tmp/xorg-nvidia.conf /config/logs/xorg-nvidia.conf
+  echo "Using NVIDIA Xorg driver ${nvidia_driver_path}" >&2
+  echo "Using NVIDIA Xorg module path ${nvidia_module_path}" >&2
 }
 
 write_modeset_config() {
@@ -203,10 +210,10 @@ start_xorg() {
 }
 
 has_nvidia_xorg_driver() {
-  [ -n "$(nvidia_xorg_module_path || true)" ]
+  [ -n "$(nvidia_xorg_driver_path || true)" ]
 }
 
-nvidia_xorg_module_path() {
+nvidia_xorg_driver_path() {
   local driver
   driver="$(
     for root in /usr /run/nvidia/driver; do
@@ -214,6 +221,13 @@ nvidia_xorg_module_path() {
       find "$root" -name nvidia_drv.so -print -quit 2>/dev/null
     done | head -n1
   )"
+  if [ -n "$driver" ]; then
+    printf '%s\n' "$driver"
+  fi
+}
+
+nvidia_xorg_module_path() {
+  local driver="$1"
   if [ -n "$driver" ]; then
     local driver_dir
     local module_dir
@@ -225,6 +239,18 @@ nvidia_xorg_module_path() {
       printf '%s\n' "$driver_dir"
     fi
   fi
+}
+
+log_nvidia_xorg_candidates() {
+  echo "Searched these roots for nvidia_drv.so:"
+  for root in /usr /run/nvidia/driver; do
+    if [ -e "$root" ]; then
+      echo "  present: $root"
+      find "$root" -name nvidia_drv.so -print 2>/dev/null | sed 's/^/    /'
+    else
+      echo "  missing: $root"
+    fi
+  done
 }
 
 case "${XORG_DRIVER:-auto}" in
