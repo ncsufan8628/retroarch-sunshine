@@ -3,6 +3,8 @@ FROM lizardbyte/sunshine:latest-ubuntu-24.04
 LABEL org.opencontainers.image.source="https://github.com/ncsufan8628/retroarch-sunshine" \
       org.opencontainers.image.description="RetroArch running on a virtual X11 desktop streamed by Sunshine"
 
+ARG VIRTUALGL_VERSION=3.1.4
+
 ENV DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:0 \
     VGL_DISPLAY=:0 \
@@ -45,7 +47,6 @@ RUN apt-get update && \
       supervisor \
       udev \
       vainfo \
-      virtualgl \
       x11-xserver-utils \
       xserver-xorg-core \
       xserver-xorg-input-libinput \
@@ -53,8 +54,10 @@ RUN apt-get update && \
       xauth \
       xdotool \
       xinput && \
+    curl -fsSL "https://github.com/VirtualGL/virtualgl/releases/download/${VIRTUALGL_VERSION}/virtualgl_${VIRTUALGL_VERSION}_amd64.deb" -o /tmp/virtualgl.deb && \
+    apt-get install -y --no-install-recommends /tmp/virtualgl.deb && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /tmp/virtualgl.deb
 
 COPY rootfs/ /
 
