@@ -145,19 +145,25 @@ def main():
     last_xinput_check = 0
     x_attached = False
     xdisplay = None
-    for _ in range(200):
+    while xdisplay is None:
         try:
             xdisplay = display.Display(os.environ["DISPLAY"])
-            break
-        except error.DisplayConnectionError:
-            time.sleep(0.1)
-
-    if xdisplay is None:
-        raise RuntimeError(f"Timed out connecting to X display {os.environ['DISPLAY']}")
+        except (error.DisplayConnectionError, error.ConnectionClosedError, OSError):
+            time.sleep(0.5)
 
     print("Sunshine input bridge started", flush=True)
 
     while True:
+        try:
+            xdisplay.sync()
+        except (error.DisplayConnectionError, error.ConnectionClosedError, OSError):
+            xdisplay = None
+            while xdisplay is None:
+                try:
+                    xdisplay = display.Display(os.environ["DISPLAY"])
+                except (error.DisplayConnectionError, error.ConnectionClosedError, OSError):
+                    time.sleep(0.5)
+
         now = time.monotonic()
         if now - last_scan > 1:
             open_devices(selector, devices, announced)

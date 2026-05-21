@@ -67,11 +67,21 @@ EOF
 }
 
 write_nvidia_config() {
+  local bus_id_section=""
+  if [ -n "${NVIDIA_XORG_BUS_ID:-}" ]; then
+    bus_id_section="    BusID \"${NVIDIA_XORG_BUS_ID}\""
+  fi
+
   cat > /tmp/xorg-nvidia.conf <<EOF
 Section "ServerFlags"
     Option "AutoAddDevices" "true"
     Option "AllowMouseOpenFail" "true"
     Option "DontVTSwitch" "true"
+EndSection
+
+Section "ServerLayout"
+    Identifier "NvidiaLayout"
+    Screen 0 "NvidiaScreen" 0 0
 EndSection
 
 Section "Files"
@@ -82,9 +92,10 @@ EndSection
 Section "Device"
     Identifier "NvidiaDevice"
     Driver "nvidia"
+${bus_id_section}
     Option "AllowEmptyInitialConfiguration" "true"
-    Option "UseDisplayDevice" "None"
     Option "HardDPMS" "false"
+    Option "ModeDebug" "true"
 EndSection
 
 Section "Monitor"
@@ -98,8 +109,12 @@ Section "Screen"
     Device "NvidiaDevice"
     Monitor "NvidiaMonitor"
     DefaultDepth ${SCREEN_DEPTH}
+    Option "AllowEmptyInitialConfiguration" "true"
+    Option "MetaModes" "${SCREEN_WIDTH}x${SCREEN_HEIGHT}"
+    Option "ModeValidation" "NoDFPNativeResolutionCheck, NoMaxPClkCheck, NoHorizSyncCheck, NoVertRefreshCheck, NoEdidModes"
     SubSection "Display"
         Depth ${SCREEN_DEPTH}
+        Modes "${SCREEN_WIDTH}x${SCREEN_HEIGHT}"
         Virtual ${SCREEN_WIDTH} ${SCREEN_HEIGHT}
     EndSubSection
 EndSection
