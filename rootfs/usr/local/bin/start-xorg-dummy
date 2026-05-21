@@ -111,6 +111,7 @@ Section "Device"
     Driver "nvidia"
 ${bus_id_section}
     Option "AllowEmptyInitialConfiguration" "true"
+    Option "UseDisplayDevice" "None"
     Option "HardDPMS" "false"
     Option "ModeDebug" "true"
     Option "VirtualHeads" "1"

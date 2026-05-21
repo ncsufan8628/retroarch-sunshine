@@ -77,6 +77,7 @@ Set `SUNSHINE_ENCODER=nvenc` to force NVIDIA video encoding. The container also 
 Use `XORG_DRIVER=nvidia` if you want startup to fail instead of silently falling back when GPU-backed Xorg is not available.
 The startup script discovers the directory containing `nvidia_drv.so` at runtime, which is helpful on hosts where the NVIDIA Container Toolkit mounts the driver under `/run/nvidia/driver`.
 If the driver is under a `drivers` subdirectory such as `/usr/lib64/xorg/modules/drivers/nvidia_drv.so`, the container uses the parent Xorg module directory so NVIDIA GLX extensions can be found too.
+The NVIDIA Xorg config uses `UseDisplayDevice=None` with a virtual head, so a physical monitor or dummy HDMI plug should not be required.
 
 To confirm Xorg rendering is GPU-backed rather than Mesa software rendering, run:
 
