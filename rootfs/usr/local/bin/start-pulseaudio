@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+rm -f /tmp/pulse/native
+mkdir -p /tmp/pulse
+
+exec pulseaudio \
+  --daemonize=no \
+  --exit-idle-time=-1 \
+  --disallow-exit=true \
+  --load="module-native-protocol-unix socket=/tmp/pulse/native auth-anonymous=1" \
+  --load="module-null-sink sink_name=retroarch_sink sink_properties=device.description=RetroArch" \
+  --load="module-null-source source_name=retroarch_source source_properties=device.description=RetroArch"

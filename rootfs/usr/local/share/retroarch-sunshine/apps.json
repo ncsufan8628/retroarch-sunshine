@@ -1,0 +1,16 @@
+{
+  "env": {
+    "DISPLAY": ":0",
+    "PULSE_SERVER": "unix:/tmp/pulse/native",
+    "XDG_RUNTIME_DIR": "/tmp/runtime-root"
+  },
+  "apps": [
+    {
+      "name": "RetroArch",
+      "cmd": "retroarch --config /config/retroarch/retroarch.cfg --menu --fullscreen",
+      "detached": [],
+      "image-path": "",
+      "output": "/config/logs/retroarch.log"
+    }
+  ]
+}

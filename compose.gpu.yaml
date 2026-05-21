@@ -1,0 +1,4 @@
+services:
+  retroarch-sunshine:
+    devices:
+      - /dev/dri:/dev/dri

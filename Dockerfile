@@ -1,55 +1,55 @@
 FROM lizardbyte/sunshine:latest-ubuntu-24.04
 
-LABEL org.opencontainers.image.source="https://github.com/ncsufan8628/retroarch-sunshine"
+LABEL org.opencontainers.image.source="https://github.com/ncsufan8628/retroarch-sunshine" \
+      org.opencontainers.image.description="RetroArch running on a virtual X11 desktop streamed by Sunshine"
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    DISPLAY=:0 \
+    PULSE_SERVER=unix:/tmp/pulse/native \
+    XDG_RUNTIME_DIR=/tmp/runtime-root \
+    SCREEN_WIDTH=1920 \
+    SCREEN_HEIGHT=1080 \
+    SCREEN_DEPTH=24 \
+    TZ=Etc/UTC
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      dbus-x11 \
+      jq \
+      libegl1 \
+      libgl1 \
+      libglu1-mesa \
+      libretro-core-info \
+      mesa-utils \
+      mesa-va-drivers \
+      openbox \
+      pulseaudio \
+      pulseaudio-utils \
       retroarch \
       retroarch-assets \
       retroarch-joypad-autoconfig \
-      libretro-core-info \
-      mesa-utils \
-      pulseaudio-utils \
+      supervisor \
       udev \
-      curl \
-      jq \
-      ca-certificates && \
+      vainfo \
+      x11-xserver-utils \
+      xauth \
+      xdotool \
+      xvfb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /config/sunshine \
-             /config/retroarch \
-             /roms
+COPY rootfs/ /
 
-RUN cat > /usr/local/bin/start-retroarch-sunshine <<'EOF' && \
-    chmod +x /usr/local/bin/start-retroarch-sunshine
-#!/usr/bin/env bash
-set -e
+RUN chmod +x /usr/local/bin/container-start \
+             /usr/local/bin/seed-config \
+             /usr/local/bin/start-pulseaudio \
+             /usr/local/bin/start-xvfb \
+             /usr/local/bin/start-openbox
 
-SUNSHINE_DIR="/config/sunshine"
-APPS_FILE="$SUNSHINE_DIR/apps.json"
+VOLUME ["/config", "/roms"]
 
-mkdir -p "$SUNSHINE_DIR"
+EXPOSE 47984-47990/tcp 48010/tcp 47998-48000/udp
 
-if [ ! -f "$APPS_FILE" ]; then
-cat > "$APPS_FILE" <<'APPS'
-{
-  "env": {},
-  "apps": [
-    {
-      "name": "RetroArch",
-      "cmd": "retroarch --menu",
-      "detached": [],
-      "image-path": ""
-    }
-  ]
-}
-APPS
-fi
-
-exec sunshine "$SUNSHINE_DIR"
-EOF
-
-CMD ["/usr/local/bin/start-retroarch-sunshine"]
+ENTRYPOINT ["/usr/local/bin/container-start"]

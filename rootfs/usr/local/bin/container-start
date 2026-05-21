@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mkdir -p "$XDG_RUNTIME_DIR" /config /roms /var/log/supervisor
+chmod 700 "$XDG_RUNTIME_DIR"
+
+/usr/local/bin/seed-config
+
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/retroarch-sunshine.conf

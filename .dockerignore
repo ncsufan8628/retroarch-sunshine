@@ -1,0 +1,6 @@
+.git
+.github
+config
+roms
+*.log
+.DS_Store

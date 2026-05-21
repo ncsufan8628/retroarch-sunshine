@@ -1,0 +1,19 @@
+services:
+  retroarch-sunshine:
+    build: .
+    image: retroarch-sunshine:local
+    container_name: retroarch-sunshine
+    restart: unless-stopped
+    ipc: host
+    environment:
+      TZ: America/New_York
+      SCREEN_WIDTH: "1920"
+      SCREEN_HEIGHT: "1080"
+      SCREEN_DEPTH: "24"
+    volumes:
+      - ./config:/config
+      - ./roms:/roms:ro
+    ports:
+      - "47984-47990:47984-47990/tcp"
+      - "48010:48010/tcp"
+      - "47998-48000:47998-48000/udp"

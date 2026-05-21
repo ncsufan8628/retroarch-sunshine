@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mkdir -p /config/retroarch /config/retroarch/system /config/retroarch/saves /config/retroarch/states /config/logs
+
+if [ ! -f /config/apps.json ]; then
+  cp /usr/local/share/retroarch-sunshine/apps.json /config/apps.json
+fi
+
+if [ ! -f /config/sunshine.conf ]; then
+  cp /usr/local/share/retroarch-sunshine/sunshine.conf /config/sunshine.conf
+fi
+
+if [ ! -f /config/retroarch/retroarch.cfg ]; then
+  cp /usr/local/share/retroarch-sunshine/retroarch.cfg /config/retroarch/retroarch.cfg
+fi
