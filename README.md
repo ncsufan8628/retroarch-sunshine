@@ -62,6 +62,32 @@ sudo modprobe uinput
 
 For NVIDIA, run the container with the NVIDIA Container Toolkit and add the appropriate GPU runtime/device settings for your host.
 
+## Unraid template notes
+
+When adding this container directly in Unraid's Docker UI, map both devices:
+
+- Host path `/dev/dri` to container path `/dev/dri`
+- Host path `/dev/uinput` to container path `/dev/uinput`
+
+`/dev/dri` is for hardware encoding. `/dev/uinput` is what Sunshine uses to create virtual keyboard, mouse, and gamepad devices for Moonlight input.
+
+If `/dev/uinput` does not exist on the Unraid host, load it before starting the container:
+
+```sh
+modprobe uinput
+```
+
+To make that persistent, add `modprobe uinput` to Unraid's boot script, such as `/boot/config/go`, before Docker containers are started.
+
+After starting the container, verify input support with:
+
+```sh
+docker exec retroarch-sunshine test -e /dev/uinput
+docker logs retroarch-sunshine | grep -i input
+```
+
+If the logs say `Unable to create virtual mouse` or `Unable to create virtual keyboard`, `/dev/uinput` is still missing or inaccessible inside the container.
+
 ## Resolution
 
 Set the virtual display size through environment variables:
