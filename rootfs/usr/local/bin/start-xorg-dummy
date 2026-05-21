@@ -70,6 +70,7 @@ write_nvidia_config() {
   local bus_id_section=""
   local nvidia_driver_path
   local nvidia_module_path
+  local nvidia_bus_id
   nvidia_driver_path="$(nvidia_xorg_driver_path || true)"
   nvidia_module_path="$(nvidia_xorg_module_path "$nvidia_driver_path")"
   if [ -z "$nvidia_module_path" ]; then
@@ -79,7 +80,13 @@ write_nvidia_config() {
   fi
 
   if [ -n "${NVIDIA_XORG_BUS_ID:-}" ]; then
-    bus_id_section="    BusID \"${NVIDIA_XORG_BUS_ID}\""
+    nvidia_bus_id="$NVIDIA_XORG_BUS_ID"
+  else
+    nvidia_bus_id="$(nvidia_xorg_bus_id || true)"
+  fi
+
+  if [ -n "$nvidia_bus_id" ]; then
+    bus_id_section="    BusID \"${nvidia_bus_id}\""
   fi
 
   cat > /tmp/xorg-nvidia.conf <<EOF
@@ -106,6 +113,7 @@ ${bus_id_section}
     Option "AllowEmptyInitialConfiguration" "true"
     Option "HardDPMS" "false"
     Option "ModeDebug" "true"
+    Option "VirtualHeads" "1"
 EndSection
 
 Section "Monitor"
@@ -135,6 +143,9 @@ EOF
   cp /tmp/xorg-nvidia.conf /config/logs/xorg-nvidia.conf
   echo "Using NVIDIA Xorg driver ${nvidia_driver_path}" >&2
   echo "Using NVIDIA Xorg module path ${nvidia_module_path}" >&2
+  if [ -n "$nvidia_bus_id" ]; then
+    echo "Using NVIDIA Xorg BusID ${nvidia_bus_id}" >&2
+  fi
 }
 
 write_modeset_config() {
@@ -251,6 +262,26 @@ log_nvidia_xorg_candidates() {
       echo "  missing: $root"
     fi
   done
+}
+
+nvidia_xorg_bus_id() {
+  if ! command -v nvidia-smi >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local pci
+  pci="$(nvidia-smi --query-gpu=pci.bus_id --format=csv,noheader 2>/dev/null | head -n1 || true)"
+  if [ -z "$pci" ]; then
+    return 0
+  fi
+
+  pci="${pci#*:}"
+  pci="${pci%.*}"
+  local bus="${pci%%:*}"
+  local slot_func="${pci#*:}"
+  local slot="${slot_func%%:*}"
+  local func="${slot_func#*:}"
+  printf 'PCI:%d:%d:%d\n' "0x$bus" "0x$slot" "0x$func"
 }
 
 case "${XORG_DRIVER:-auto}" in
