@@ -48,7 +48,7 @@ def xinput_has_passthrough():
     return "Mouse passthrough" in out or "Keyboard passthrough" in out
 
 
-def open_devices(selector, devices):
+def open_devices(selector, devices, announced):
     known = set(devices)
     for path in event_paths():
         if path in known:
@@ -62,7 +62,10 @@ def open_devices(selector, devices):
             continue
         devices[path] = dev
         selector.register(dev.fd, selectors.EVENT_READ, dev)
-        print(f"Input bridge attached {dev.name} at {path}", flush=True)
+        announcement = (dev.name, path)
+        if announcement not in announced:
+            print(f"Input bridge attached {dev.name} at {path}", flush=True)
+            announced.add(announcement)
 
 
 def close_device(selector, devices, dev):
@@ -134,6 +137,7 @@ def main():
     os.environ.setdefault("DISPLAY", ":0")
     selector = selectors.DefaultSelector()
     devices = {}
+    announced = set()
     abs_state = {}
     dx = 0
     dy = 0
@@ -156,7 +160,7 @@ def main():
     while True:
         now = time.monotonic()
         if now - last_scan > 1:
-            open_devices(selector, devices)
+            open_devices(selector, devices, announced)
             last_scan = now
         if now - last_xinput_check > 1:
             x_attached = xinput_has_passthrough()

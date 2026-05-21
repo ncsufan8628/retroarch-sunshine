@@ -68,3 +68,4 @@ if [ ! -f /config/retroarch/retroarch.cfg ]; then
 fi
 
 set_retroarch_config input_driver x
+set_retroarch_config input_joypad_driver udev

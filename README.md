@@ -118,6 +118,7 @@ Replace `eventX` with the event device created for a Sunshine keyboard or mouse;
 The container includes an input hotplug watcher that retriggers udev when Sunshine passthrough devices exist in `libinput` but are missing from `xinput`.
 It also includes an XTEST fallback bridge that reads Sunshine passthrough devices directly and injects events into X11 if Xorg does not attach those devices itself.
 RetroArch is configured with `input_driver = "x"` so keyboard and mouse events delivered through the dummy Xorg session are used by RetroArch.
+RetroArch uses `input_joypad_driver = "udev"` so Moonlight gamepads are read from Sunshine's virtual `/dev/input` devices.
 
 The container waits for `DUMMY0 connected` before starting Sunshine. If Sunshine still logs `Unable to find display or encoder during startup`, check `docker exec retroarch-sunshine xrandr --display :0 --query` and `/config/logs/xorg.log`.
 
