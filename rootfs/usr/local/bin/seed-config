@@ -63,6 +63,10 @@ if [ -n "${SUNSHINE_HEVC_MODE:-}" ]; then
   set_sunshine_config hevc_mode "$SUNSHINE_HEVC_MODE"
 fi
 
+if [ -n "${SUNSHINE_CAPTURE:-}" ]; then
+  set_sunshine_config capture "$SUNSHINE_CAPTURE"
+fi
+
 if [ ! -f /config/retroarch/retroarch.cfg ]; then
   cp /usr/local/share/retroarch-sunshine/retroarch.cfg /config/retroarch/retroarch.cfg
 fi
