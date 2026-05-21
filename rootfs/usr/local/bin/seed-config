@@ -51,6 +51,17 @@ set_retroarch_config() {
   fi
 }
 
+normalize_capture() {
+  case "$1" in
+    nfbc)
+      printf 'nvfbc\n'
+      ;;
+    *)
+      printf '%s\n' "$1"
+      ;;
+  esac
+}
+
 if [ -n "${SUNSHINE_ENCODER:-}" ]; then
   set_sunshine_config encoder "$SUNSHINE_ENCODER"
 fi
@@ -64,7 +75,7 @@ if [ -n "${SUNSHINE_HEVC_MODE:-}" ]; then
 fi
 
 if [ -n "${SUNSHINE_CAPTURE:-}" ]; then
-  set_sunshine_config capture "$SUNSHINE_CAPTURE"
+  set_sunshine_config capture "$(normalize_capture "$SUNSHINE_CAPTURE")"
 elif [ "${XORG_DRIVER:-auto}" = "nvidia" ]; then
   set_sunshine_config capture nvfbc
 else
