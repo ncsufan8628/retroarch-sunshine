@@ -5,7 +5,6 @@ services:
       - /dev/uinput:/dev/uinput
     volumes:
       - /dev/input:/dev/input
-      - /run/udev:/run/udev:ro
     group_add:
       - video
       - input

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mkdir -p /run/udev /run/udev/data
+
+udevd=""
+for candidate in /lib/systemd/systemd-udevd /usr/lib/systemd/systemd-udevd; do
+  if [ -x "$candidate" ]; then
+    udevd="$candidate"
+    break
+  fi
+done
+
+if [ -z "$udevd" ]; then
+  echo "systemd-udevd not found; input hotplug will be limited" >&2
+  exec sleep infinity
+fi
+
+udevadm trigger --subsystem-match=input --action=add >/dev/null 2>&1 || true
+
+exec "$udevd"

@@ -80,10 +80,9 @@ When adding this container directly in Unraid's Docker UI, map both devices:
 - Host path `/dev/dri` to container path `/dev/dri`
 - Host path `/dev/uinput` to container path `/dev/uinput`
 - Host path `/dev/input` to container path `/dev/input`
-- Host path `/run/udev` to container path `/run/udev`, read-only
 
 `/dev/dri` is for hardware encoding. `/dev/uinput` is what Sunshine uses to create virtual keyboard, mouse, and gamepad devices for Moonlight input.
-The `/dev/input` and `/run/udev` mappings allow the container's dummy Xorg display to discover and read those virtual input devices.
+The `/dev/input` mapping allows the container's dummy Xorg display to discover and read those virtual input devices.
 
 If `/dev/uinput` does not exist on the Unraid host, load it before starting the container:
 
@@ -103,7 +102,7 @@ docker logs retroarch-sunshine | grep -i input
 ```
 
 If the logs say `Unable to create virtual mouse` or `Unable to create virtual keyboard`, `/dev/uinput` is still missing or inaccessible inside the container.
-If `xinput list` does not show Moonlight/Sunshine virtual input devices while a client is connected, `/dev/input` or `/run/udev` is not visible to the dummy Xorg server.
+If `xinput list` does not show Moonlight/Sunshine virtual input devices while a client is connected, `/dev/input` is not visible to the dummy Xorg server or the container's udev service is not running.
 
 If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:
 

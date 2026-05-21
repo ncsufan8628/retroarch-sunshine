@@ -20,12 +20,14 @@ RUN apt-get update && \
       ca-certificates \
       curl \
       dbus-x11 \
+      evtest \
       intel-media-va-driver \
       jq \
       libegl1 \
       libgl1 \
       libglu1-mesa \
       libretro-core-info \
+      libinput-tools \
       mesa-utils \
       mesa-va-drivers \
       nano \
@@ -51,6 +53,7 @@ COPY rootfs/ /
 
 RUN chmod +x /usr/local/bin/container-start \
              /usr/local/bin/seed-config \
+             /usr/local/bin/start-udev \
              /usr/local/bin/start-pulseaudio \
              /usr/local/bin/start-xorg-dummy \
              /usr/local/bin/start-openbox
