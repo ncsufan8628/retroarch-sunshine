@@ -65,6 +65,10 @@ fi
 
 if [ -n "${SUNSHINE_CAPTURE:-}" ]; then
   set_sunshine_config capture "$SUNSHINE_CAPTURE"
+elif [ "${XORG_DRIVER:-auto}" = "nvidia" ]; then
+  set_sunshine_config capture nvfbc
+else
+  set_sunshine_config capture x11
 fi
 
 if [ ! -f /config/retroarch/retroarch.cfg ]; then

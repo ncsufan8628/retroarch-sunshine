@@ -150,7 +150,7 @@ docker logs retroarch-sunshine | grep -i "Found H.264 encoder"
 
 `libx264 [software]` means CPU encoding. For Intel/AMD hardware encoding, set `SUNSHINE_ENCODER=vaapi` and `SUNSHINE_ADAPTER_NAME` to the correct `/dev/dri/renderD*` node.
 `h264_nvenc [nvenc]` means Sunshine encoding is on NVIDIA; remaining CPU load is usually RetroArch/Xorg rendering. Use `XORG_DRIVER=nvidia` and verify with `glxinfo -B`.
-The image defaults `SUNSHINE_CAPTURE=x11` so Sunshine does not probe PipeWire/portal capture inside the container. To test NVIDIA Frame Buffer Capture instead, set `SUNSHINE_CAPTURE=nvfbc`.
+When `XORG_DRIVER=nvidia`, the image defaults Sunshine to `capture=nvfbc` because the headless NVIDIA NoScanout X screen has no physical RandR output for X11 capture to enumerate. Other Xorg modes default to `capture=x11` so Sunshine does not probe PipeWire/portal capture inside the container.
 
 ## Resolution
 

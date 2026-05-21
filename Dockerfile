@@ -11,7 +11,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SCREEN_HEIGHT=1080 \
     SCREEN_DEPTH=24 \
     XORG_DRIVER=auto \
-    SUNSHINE_CAPTURE=x11 \
     TZ=Etc/UTC
 
 USER root
