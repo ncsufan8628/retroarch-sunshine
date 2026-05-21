@@ -32,7 +32,6 @@ jobs:
           BASE_DIGEST="$(docker buildx imagetools inspect "$BASE_IMAGE" --format '{{json .Manifest.Digest}}' | tr -d '"')"
 
           SUNSHINE_JSON="$(curl -fsSL https://api.github.com/repos/LizardByte/Sunshine/releases/latest)"
-
           SUNSHINE_VERSION="$(echo "$SUNSHINE_JSON" | jq -r '.tag_name')"
 
           IMAGE_TAG="${SUNSHINE_VERSION}-${BASE_DIGEST#sha256:}"

@@ -10,6 +10,8 @@ RUN apt-get update && \
       curl \
       jq \
       udev \
+      fuse \
+      libfuse2t64 \
       libnotify4 \
       libxtst6 \
       libnss3 \
@@ -24,9 +26,15 @@ RUN apt-get update && \
       libayatana-appindicator3-1 && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget -O /usr/bin/sunshine \
+RUN wget -O /tmp/sunshine.AppImage \
     "https://github.com/LizardByte/Sunshine/releases/latest/download/sunshine.AppImage" && \
-    chmod +x /usr/bin/sunshine
+    chmod +x /tmp/sunshine.AppImage && \
+    cd /opt && \
+    /tmp/sunshine.AppImage --appimage-extract && \
+    mv /opt/squashfs-root /opt/sunshine && \
+    ln -sf /opt/sunshine/AppRun /usr/bin/sunshine && \
+    rm -f /tmp/sunshine.AppImage && \
+    /usr/bin/sunshine --version || true
 
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/sunshine \
              /etc/s6-overlay/s6-rc.d/user/contents.d && \
