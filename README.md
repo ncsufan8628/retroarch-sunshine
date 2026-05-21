@@ -4,6 +4,14 @@ Docker image for running RetroArch inside a lightweight virtual X11 desktop and 
 
 ## Quick start
 
+For a headless Linux server with `/dev/dri` hardware encoding and `/dev/uinput` input injection:
+
+```sh
+docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
+```
+
+For a portable software-only test:
+
 ```sh
 docker compose up -d --build
 ```
@@ -35,13 +43,13 @@ Sunshine requires these published ports for the web UI, pairing, and streaming:
 
 ## GPU notes
 
-For VAAPI-capable Intel/AMD hardware encoding on Linux hosts, run with the GPU override:
+For VAAPI-capable Intel/AMD hardware encoding and Sunshine virtual input on Linux hosts, use `compose.gpu.yaml`. This maps `/dev/dri` into the container. The default `compose.yaml` does not require `/dev/dri`, so it can still start on hosts without that device.
+
+The override also maps `/dev/uinput` for Sunshine keyboard, mouse, and gamepad injection. If your host does not expose `/dev/uinput`, load the kernel module first:
 
 ```sh
-docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
+sudo modprobe uinput
 ```
-
-This maps `/dev/dri` into the container. The default `compose.yaml` does not require `/dev/dri`, so it can still start on hosts without that device.
 
 For NVIDIA, run the container with the NVIDIA Container Toolkit and add the appropriate GPU runtime/device settings for your host.
 

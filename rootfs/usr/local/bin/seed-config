@@ -6,6 +6,7 @@ mkdir -p /config/retroarch \
          /config/retroarch/system \
          /config/retroarch/saves \
          /config/retroarch/states \
+         /config/.config \
          /config/logs
 
 if [ ! -f /config/apps.json ]; then
@@ -14,6 +15,10 @@ fi
 
 if [ ! -f /config/sunshine.conf ]; then
   cp /usr/local/share/retroarch-sunshine/sunshine.conf /config/sunshine.conf
+fi
+
+if grep -qx 'output_name = screen' /config/sunshine.conf; then
+  sed -i '/^output_name = screen$/d' /config/sunshine.conf
 fi
 
 if [ ! -f /config/retroarch/retroarch.cfg ]; then

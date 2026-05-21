@@ -2,3 +2,7 @@ services:
   retroarch-sunshine:
     devices:
       - /dev/dri:/dev/dri
+      - /dev/uinput:/dev/uinput
+    group_add:
+      - video
+      - input

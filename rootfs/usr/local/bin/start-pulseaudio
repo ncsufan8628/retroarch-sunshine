@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export HOME=/tmp/pulse-home
+export XDG_CONFIG_HOME=/tmp/pulse-home/.config
+export XDG_RUNTIME_DIR=/tmp/runtime-root
+
 rm -f /tmp/pulse/native
-mkdir -p /tmp/pulse
+mkdir -p /tmp/pulse "$HOME" "$XDG_CONFIG_HOME" "$XDG_RUNTIME_DIR"
+chmod 700 "$HOME" "$XDG_RUNTIME_DIR"
 
 exec pulseaudio \
   --daemonize=no \
