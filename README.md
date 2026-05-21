@@ -18,6 +18,15 @@ docker compose up -d --build
 
 Then open the Sunshine web UI at `https://localhost:47990`, finish Sunshine setup/pairing, and choose the `RetroArch` app from Moonlight.
 
+For another device on your LAN, open `https://SERVER-IP:47990`. If Sunshine shows a CSRF protection error, set the exact browser origin in `compose.yaml` and recreate the container:
+
+```yaml
+environment:
+  SUNSHINE_CSRF_ALLOWED_ORIGINS: "https://SERVER-IP:47990"
+```
+
+Multiple origins can be comma-separated, for example `https://192.168.1.50:47990,https://media-server.local:47990`.
+
 ## Volumes
 
 - `./config:/config` stores Sunshine state, credentials, logs, and RetroArch settings.

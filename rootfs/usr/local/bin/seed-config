@@ -21,6 +21,14 @@ if grep -qx 'output_name = screen' /config/sunshine.conf; then
   sed -i '/^output_name = screen$/d' /config/sunshine.conf
 fi
 
+if [ -n "${SUNSHINE_CSRF_ALLOWED_ORIGINS:-}" ]; then
+  if grep -q '^csrf_allowed_origins =' /config/sunshine.conf; then
+    sed -i "s|^csrf_allowed_origins =.*|csrf_allowed_origins = ${SUNSHINE_CSRF_ALLOWED_ORIGINS}|" /config/sunshine.conf
+  else
+    printf 'csrf_allowed_origins = %s\n' "$SUNSHINE_CSRF_ALLOWED_ORIGINS" >> /config/sunshine.conf
+  fi
+fi
+
 if [ ! -f /config/retroarch/retroarch.cfg ]; then
   cp /usr/local/share/retroarch-sunshine/retroarch.cfg /config/retroarch/retroarch.cfg
 fi

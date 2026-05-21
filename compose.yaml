@@ -10,6 +10,7 @@ services:
       SCREEN_WIDTH: "1920"
       SCREEN_HEIGHT: "1080"
       SCREEN_DEPTH: "24"
+      SUNSHINE_CSRF_ALLOWED_ORIGINS: ""
     volumes:
       - ./config:/config
       - ./roms:/roms:ro
