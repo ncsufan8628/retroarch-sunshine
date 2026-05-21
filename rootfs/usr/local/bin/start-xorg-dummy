@@ -208,7 +208,12 @@ has_nvidia_xorg_driver() {
 
 nvidia_xorg_module_path() {
   local driver
-  driver="$(find /usr /run/nvidia/driver -type f -name nvidia_drv.so -print 2>/dev/null | head -n1 || true)"
+  driver="$(
+    for root in /usr /run/nvidia/driver; do
+      [ -e "$root" ] || continue
+      find "$root" -name nvidia_drv.so -print -quit 2>/dev/null
+    done | head -n1
+  )"
   if [ -n "$driver" ]; then
     local driver_dir
     local module_dir

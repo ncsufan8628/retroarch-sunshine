@@ -81,7 +81,7 @@ If the driver is under a `drivers` subdirectory such as `/usr/lib64/xorg/modules
 To confirm Xorg rendering is GPU-backed rather than Mesa software rendering, run:
 
 ```sh
-docker exec retroarch-sunshine find /usr /run/nvidia/driver -name nvidia_drv.so -print
+docker exec retroarch-sunshine sh -c 'for root in /usr /run/nvidia/driver; do [ -e "$root" ] && find "$root" -name nvidia_drv.so -print; done'
 docker exec retroarch-sunshine glxinfo -B
 docker exec retroarch-sunshine grep -Ei "NVIDIA|DRISWRAST|swrast|GLX" /config/logs/xorg.log
 ```
