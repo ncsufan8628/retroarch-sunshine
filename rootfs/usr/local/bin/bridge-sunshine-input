@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+import os
+import selectors
+import subprocess
+import time
+
+from evdev import InputDevice, ecodes
+from Xlib import X, display
+from Xlib.ext import xtest
+
+PASSTHROUGH_NAMES = (
+    "Mouse passthrough",
+    "Keyboard passthrough",
+    "Touch passthrough",
+    "Pen passthrough",
+)
+
+BUTTON_MAP = {
+    ecodes.BTN_LEFT: 1,
+    ecodes.BTN_MIDDLE: 2,
+    ecodes.BTN_RIGHT: 3,
+    ecodes.BTN_SIDE: 8,
+    ecodes.BTN_EXTRA: 9,
+}
+
+
+def event_paths():
+    base = "/dev/input"
+    if not os.path.isdir(base):
+        return []
+    return [os.path.join(base, name) for name in os.listdir(base) if name.startswith("event")]
+
+
+def is_passthrough(dev):
+    return any(dev.name.startswith(name) for name in PASSTHROUGH_NAMES)
+
+
+def xinput_has_passthrough():
+    try:
+        out = subprocess.check_output(
+            ["xinput", "list"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=1,
+        )
+    except Exception:
+        return False
+    return "Mouse passthrough" in out or "Keyboard passthrough" in out
+
+
+def open_devices(selector, devices):
+    known = set(devices)
+    for path in event_paths():
+        if path in known:
+            continue
+        try:
+            dev = InputDevice(path)
+        except OSError:
+            continue
+        if not is_passthrough(dev):
+            dev.close()
+            continue
+        dev.set_nonblocking(True)
+        devices[path] = dev
+        selector.register(dev.fd, selectors.EVENT_READ, dev)
+        print(f"Input bridge attached {dev.name} at {path}", flush=True)
+
+
+def close_device(selector, devices, dev):
+    path = dev.path
+    try:
+        selector.unregister(dev.fd)
+    except Exception:
+        pass
+    try:
+        dev.close()
+    except Exception:
+        pass
+    devices.pop(path, None)
+
+
+def keycode_to_x(evdev_code):
+    return evdev_code + 8
+
+
+def root_geometry(xdisplay):
+    root = xdisplay.screen().root
+    geometry = root.get_geometry()
+    return root, geometry.width, geometry.height
+
+
+def inject_button(xdisplay, button, pressed):
+    xtest.fake_input(xdisplay, X.ButtonPress if pressed else X.ButtonRelease, button)
+    xdisplay.sync()
+
+
+def inject_motion(xdisplay, dx, dy):
+    if dx == 0 and dy == 0:
+        return
+    root, width, height = root_geometry(xdisplay)
+    pointer = root.query_pointer()
+    x = max(0, min(width - 1, pointer.root_x + dx))
+    y = max(0, min(height - 1, pointer.root_y + dy))
+    xtest.fake_input(xdisplay, X.MotionNotify, x=x, y=y)
+    xdisplay.sync()
+
+
+def inject_abs_motion(xdisplay, dev, abs_state):
+    if ecodes.ABS_X not in abs_state or ecodes.ABS_Y not in abs_state:
+        return
+    _, width, height = root_geometry(xdisplay)
+    xinfo = dev.absinfo(ecodes.ABS_X)
+    yinfo = dev.absinfo(ecodes.ABS_Y)
+    xspan = max(1, xinfo.max - xinfo.min)
+    yspan = max(1, yinfo.max - yinfo.min)
+    x = int((abs_state[ecodes.ABS_X] - xinfo.min) * (width - 1) / xspan)
+    y = int((abs_state[ecodes.ABS_Y] - yinfo.min) * (height - 1) / yspan)
+    xtest.fake_input(xdisplay, X.MotionNotify, x=max(0, min(width - 1, x)), y=max(0, min(height - 1, y)))
+    xdisplay.sync()
+
+
+def inject_key(xdisplay, code, value):
+    if code >= 256:
+        return
+    if value == 1:
+        xtest.fake_input(xdisplay, X.KeyPress, keycode_to_x(code))
+    elif value == 0:
+        xtest.fake_input(xdisplay, X.KeyRelease, keycode_to_x(code))
+    elif value == 2:
+        xtest.fake_input(xdisplay, X.KeyPress, keycode_to_x(code))
+    xdisplay.sync()
+
+
+def main():
+    os.environ.setdefault("DISPLAY", ":0")
+    selector = selectors.DefaultSelector()
+    devices = {}
+    abs_state = {}
+    dx = 0
+    dy = 0
+    last_scan = 0
+    last_xinput_check = 0
+    x_attached = False
+    xdisplay = display.Display(os.environ["DISPLAY"])
+
+    print("Sunshine input bridge started", flush=True)
+
+    while True:
+        now = time.monotonic()
+        if now - last_scan > 1:
+            open_devices(selector, devices)
+            last_scan = now
+        if now - last_xinput_check > 1:
+            x_attached = xinput_has_passthrough()
+            last_xinput_check = now
+
+        for key, _mask in selector.select(timeout=0.01):
+            dev = key.data
+            try:
+                read_events = list(dev.read())
+            except OSError:
+                close_device(selector, devices, dev)
+                continue
+            for event in read_events:
+                if x_attached:
+                    continue
+                if event.type == ecodes.EV_KEY:
+                    if event.code in BUTTON_MAP:
+                        inject_button(xdisplay, BUTTON_MAP[event.code], event.value != 0)
+                    else:
+                        inject_key(xdisplay, event.code, event.value)
+                elif event.type == ecodes.EV_REL:
+                    if event.code == ecodes.REL_X:
+                        dx += event.value
+                    elif event.code == ecodes.REL_Y:
+                        dy += event.value
+                    elif event.code == ecodes.REL_WHEEL:
+                        inject_button(xdisplay, 4 if event.value > 0 else 5, True)
+                        inject_button(xdisplay, 4 if event.value > 0 else 5, False)
+                    elif event.code == ecodes.REL_HWHEEL:
+                        inject_button(xdisplay, 6 if event.value > 0 else 7, True)
+                        inject_button(xdisplay, 6 if event.value > 0 else 7, False)
+                elif event.type == ecodes.EV_ABS:
+                    abs_state[event.code] = event.value
+                    inject_abs_motion(xdisplay, dev, abs_state)
+
+        if not x_attached and (dx or dy):
+            inject_motion(xdisplay, dx, dy)
+            dx = 0
+            dy = 0
+
+
+if __name__ == "__main__":
+    main()

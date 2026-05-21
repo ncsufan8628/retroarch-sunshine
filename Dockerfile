@@ -34,6 +34,9 @@ RUN apt-get update && \
       openbox \
       pulseaudio \
       pulseaudio-utils \
+      python3 \
+      python3-evdev \
+      python3-xlib \
       retroarch \
       retroarch-assets \
       supervisor \
@@ -60,6 +63,7 @@ RUN chmod +x /usr/local/bin/container-start \
              /usr/local/bin/start-openbox \
              /usr/local/bin/start-sunshine \
              /usr/local/bin/watch-input-hotplug \
+             /usr/local/bin/bridge-sunshine-input \
              /usr/local/bin/start-retroarch
 
 VOLUME ["/config", "/roms"]
