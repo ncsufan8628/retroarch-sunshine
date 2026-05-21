@@ -16,6 +16,7 @@ USER root
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+      bash-completion \
       ca-certificates \
       curl \
       dbus-x11 \
@@ -26,6 +27,7 @@ RUN apt-get update && \
       libretro-core-info \
       mesa-utils \
       mesa-va-drivers \
+      nano \
       openbox \
       pulseaudio \
       pulseaudio-utils \
