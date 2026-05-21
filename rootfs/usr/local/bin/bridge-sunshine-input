@@ -5,7 +5,7 @@ import subprocess
 import time
 
 from evdev import InputDevice, ecodes
-from Xlib import X, display
+from Xlib import X, display, error
 from Xlib.ext import xtest
 
 PASSTHROUGH_NAMES = (
@@ -60,7 +60,6 @@ def open_devices(selector, devices):
         if not is_passthrough(dev):
             dev.close()
             continue
-        dev.set_nonblocking(True)
         devices[path] = dev
         selector.register(dev.fd, selectors.EVENT_READ, dev)
         print(f"Input bridge attached {dev.name} at {path}", flush=True)
@@ -141,7 +140,16 @@ def main():
     last_scan = 0
     last_xinput_check = 0
     x_attached = False
-    xdisplay = display.Display(os.environ["DISPLAY"])
+    xdisplay = None
+    for _ in range(200):
+        try:
+            xdisplay = display.Display(os.environ["DISPLAY"])
+            break
+        except error.DisplayConnectionError:
+            time.sleep(0.1)
+
+    if xdisplay is None:
+        raise RuntimeError(f"Timed out connecting to X display {os.environ['DISPLAY']}")
 
     print("Sunshine input bridge started", flush=True)
 
