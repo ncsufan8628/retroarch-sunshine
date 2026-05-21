@@ -11,9 +11,12 @@ RUN apt-get update && \
       ca-certificates \
       jq \
       udev \
-      pulseaudio-utils && \
+      pulseaudio-utils \
+      curl && \
     wget -O /tmp/sunshine.deb "$SUNSHINE_DEB_URL" && \
-    apt-get install -y /tmp/sunshine.deb || apt-get install -f -y && \
+    apt-get update && \
+    apt-get install -y /tmp/sunshine.deb && \
+    command -v sunshine && \
     rm -f /tmp/sunshine.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
