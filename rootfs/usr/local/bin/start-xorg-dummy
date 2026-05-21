@@ -68,6 +68,13 @@ EOF
 
 write_nvidia_config() {
   local bus_id_section=""
+  local nvidia_module_path
+  nvidia_module_path="$(nvidia_xorg_module_path || true)"
+  if [ -z "$nvidia_module_path" ]; then
+    echo "NVIDIA Xorg driver nvidia_drv.so was not found in the container" >&2
+    exit 1
+  fi
+
   if [ -n "${NVIDIA_XORG_BUS_ID:-}" ]; then
     bus_id_section="    BusID \"${NVIDIA_XORG_BUS_ID}\""
   fi
@@ -85,7 +92,7 @@ Section "ServerLayout"
 EndSection
 
 Section "Files"
-    ModulePath "/usr/lib/x86_64-linux-gnu/nvidia/xorg"
+    ModulePath "${nvidia_module_path}"
     ModulePath "/usr/lib/xorg/modules"
 EndSection
 
@@ -123,6 +130,54 @@ $(write_input_config)
 EOF
 }
 
+write_modeset_config() {
+  local bus_id_section=""
+  if [ -n "${XORG_BUS_ID:-}" ]; then
+    bus_id_section="    BusID \"${XORG_BUS_ID}\""
+  fi
+
+  cat > /tmp/xorg-modeset.conf <<EOF
+Section "ServerFlags"
+    Option "AutoAddDevices" "true"
+    Option "AllowMouseOpenFail" "true"
+    Option "DontVTSwitch" "true"
+EndSection
+
+Section "ServerLayout"
+    Identifier "ModesetLayout"
+    Screen 0 "ModesetScreen" 0 0
+EndSection
+
+Section "Device"
+    Identifier "ModesetDevice"
+    Driver "modesetting"
+${bus_id_section}
+    Option "AccelMethod" "glamor"
+    Option "DRI" "3"
+EndSection
+
+Section "Monitor"
+    Identifier "ModesetMonitor"
+    HorizSync 5.0-1000.0
+    VertRefresh 5.0-200.0
+EndSection
+
+Section "Screen"
+    Identifier "ModesetScreen"
+    Device "ModesetDevice"
+    Monitor "ModesetMonitor"
+    DefaultDepth ${SCREEN_DEPTH}
+    SubSection "Display"
+        Depth ${SCREEN_DEPTH}
+        Modes "${SCREEN_WIDTH}x${SCREEN_HEIGHT}"
+        Virtual ${SCREEN_WIDTH} ${SCREEN_HEIGHT}
+    EndSubSection
+EndSection
+
+$(write_input_config)
+EOF
+}
+
 exec_xorg() {
   local config="$1"
   exec Xorg "$DISPLAY" \
@@ -148,14 +203,25 @@ start_xorg() {
 }
 
 has_nvidia_xorg_driver() {
-  [ -e /usr/lib/x86_64-linux-gnu/nvidia/xorg/nvidia_drv.so ] || \
-    [ -e /usr/lib/xorg/modules/drivers/nvidia_drv.so ]
+  [ -n "$(nvidia_xorg_module_path || true)" ]
+}
+
+nvidia_xorg_module_path() {
+  local driver
+  driver="$(find /usr /run/nvidia/driver -type f -name nvidia_drv.so -print 2>/dev/null | head -n1 || true)"
+  if [ -n "$driver" ]; then
+    dirname "$driver"
+  fi
 }
 
 case "${XORG_DRIVER:-auto}" in
   nvidia)
     write_nvidia_config
     exec_xorg /tmp/xorg-nvidia.conf
+    ;;
+  modeset)
+    write_modeset_config
+    exec_xorg /tmp/xorg-modeset.conf
     ;;
   dummy)
     write_dummy_config
