@@ -29,6 +29,29 @@ if [ -n "${SUNSHINE_CSRF_ALLOWED_ORIGINS:-}" ]; then
   fi
 fi
 
+set_sunshine_config() {
+  local key="$1"
+  local value="$2"
+
+  if grep -q "^${key} =" /config/sunshine.conf; then
+    sed -i "s|^${key} =.*|${key} = ${value}|" /config/sunshine.conf
+  else
+    printf '%s = %s\n' "$key" "$value" >> /config/sunshine.conf
+  fi
+}
+
+if [ -n "${SUNSHINE_ENCODER:-}" ]; then
+  set_sunshine_config encoder "$SUNSHINE_ENCODER"
+fi
+
+if [ -n "${SUNSHINE_ADAPTER_NAME:-}" ]; then
+  set_sunshine_config adapter_name "$SUNSHINE_ADAPTER_NAME"
+fi
+
+if [ -n "${SUNSHINE_HEVC_MODE:-}" ]; then
+  set_sunshine_config hevc_mode "$SUNSHINE_HEVC_MODE"
+fi
+
 if [ ! -f /config/retroarch/retroarch.cfg ]; then
   cp /usr/local/share/retroarch-sunshine/retroarch.cfg /config/retroarch/retroarch.cfg
 fi

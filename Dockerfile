@@ -20,6 +20,7 @@ RUN apt-get update && \
       ca-certificates \
       curl \
       dbus-x11 \
+      intel-media-va-driver \
       jq \
       libegl1 \
       libgl1 \

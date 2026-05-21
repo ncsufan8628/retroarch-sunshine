@@ -54,6 +54,17 @@ Sunshine requires these published ports for the web UI, pairing, and streaming:
 
 For VAAPI-capable Intel/AMD hardware encoding and Sunshine virtual input on Linux hosts, use `compose.gpu.yaml`. This maps `/dev/dri` into the container. The default `compose.yaml` does not require `/dev/dri`, so it can still start on hosts without that device.
 
+To force VAAPI instead of CPU encoding, set:
+
+```yaml
+environment:
+  SUNSHINE_ENCODER: "vaapi"
+  SUNSHINE_ADAPTER_NAME: "/dev/dri/renderD129"
+  SUNSHINE_HEVC_MODE: "2"
+```
+
+Use the render node for the GPU you want Sunshine to encode with. On a mixed NVIDIA + Intel Unraid host, the Intel iGPU is often `/dev/dri/renderD129`, but verify with `ls -l /dev/dri` and `docker exec retroarch-sunshine vainfo --display drm --device /dev/dri/renderD129`.
+
 The override also maps `/dev/uinput` for Sunshine keyboard, mouse, and gamepad injection. If your host does not expose `/dev/uinput`, load the kernel module first:
 
 ```sh
@@ -93,6 +104,14 @@ docker logs retroarch-sunshine | grep -i input
 
 If the logs say `Unable to create virtual mouse` or `Unable to create virtual keyboard`, `/dev/uinput` is still missing or inaccessible inside the container.
 If `xinput list` does not show Moonlight/Sunshine virtual input devices while a client is connected, `/dev/input` or `/run/udev` is not visible to the dummy Xorg server.
+
+If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:
+
+```sh
+docker logs retroarch-sunshine | grep -i "Found H.264 encoder"
+```
+
+`libx264 [software]` means CPU encoding. For Intel/AMD hardware encoding, set `SUNSHINE_ENCODER=vaapi` and `SUNSHINE_ADAPTER_NAME` to the correct `/dev/dri/renderD*` node.
 
 ## Resolution
 
