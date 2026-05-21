@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+for _ in $(seq 1 50); do
+  if [ -S /run/udev/control ]; then
+    break
+  fi
+  sleep 0.1
+done
+
 cat > /tmp/xorg-dummy.conf <<EOF
 Section "ServerFlags"
     Option "AutoAddDevices" "true"

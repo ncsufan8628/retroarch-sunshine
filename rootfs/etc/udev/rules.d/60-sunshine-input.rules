@@ -1,0 +1,9 @@
+# Sunshine creates virtual devices through /dev/uinput. In containers, udev may
+# not always classify those devices, so libinput/Xorg can ignore them.
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Keyboard passthrough", ENV{ID_INPUT}="1", ENV{ID_INPUT_KEY}="1", ENV{ID_INPUT_KEYBOARD}="1"
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Mouse passthrough", ENV{ID_INPUT}="1", ENV{ID_INPUT_MOUSE}="1"
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Touchpad passthrough", ENV{ID_INPUT}="1", ENV{ID_INPUT_TOUCHPAD}="1"
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Pen tablet passthrough", ENV{ID_INPUT}="1", ENV{ID_INPUT_TABLET}="1"
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Microsoft X-Box 360 pad", ENV{ID_INPUT}="1", ENV{ID_INPUT_JOYSTICK}="1"
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Xbox 360 Controller", ENV{ID_INPUT}="1", ENV{ID_INPUT_JOYSTICK}="1"
+ACTION=="add|change", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="Sony Interactive Entertainment Wireless Controller", ENV{ID_INPUT}="1", ENV{ID_INPUT_JOYSTICK}="1"

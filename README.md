@@ -98,11 +98,13 @@ After starting the container, verify input support with:
 docker exec retroarch-sunshine test -e /dev/uinput
 docker exec retroarch-sunshine test -d /dev/input
 docker exec retroarch-sunshine xinput list
+docker exec retroarch-sunshine udevadm info --query=property --name=/dev/input/eventX
 docker logs retroarch-sunshine | grep -i input
 ```
 
 If the logs say `Unable to create virtual mouse` or `Unable to create virtual keyboard`, `/dev/uinput` is still missing or inaccessible inside the container.
 If `xinput list` does not show Moonlight/Sunshine virtual input devices while a client is connected, `/dev/input` is not visible to the dummy Xorg server or the container's udev service is not running.
+Replace `eventX` with the event device created for a Sunshine keyboard or mouse; its udev properties should include `ID_INPUT=1` and either `ID_INPUT_KEYBOARD=1` or `ID_INPUT_MOUSE=1`.
 
 If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:
 

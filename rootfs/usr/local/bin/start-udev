@@ -16,6 +16,12 @@ if [ -z "$udevd" ]; then
   exec sleep infinity
 fi
 
-udevadm trigger --subsystem-match=input --action=add >/dev/null 2>&1 || true
+udevadm control --reload-rules >/dev/null 2>&1 || true
 
-exec "$udevd"
+"$udevd" --daemon
+
+udevadm control --reload-rules >/dev/null 2>&1 || true
+udevadm trigger --subsystem-match=input --action=add >/dev/null 2>&1 || true
+udevadm settle --timeout=5 >/dev/null 2>&1 || true
+
+exec tail -f /dev/null
