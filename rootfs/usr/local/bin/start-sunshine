@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+for _ in $(seq 1 200); do
+  if xrandr --display "$DISPLAY" --query 2>/dev/null | grep -q '^DUMMY0 connected'; then
+    break
+  fi
+  sleep 0.1
+done
+
+if ! xrandr --display "$DISPLAY" --query 2>/dev/null | grep -q '^DUMMY0 connected'; then
+  echo "Timed out waiting for Xorg dummy display on $DISPLAY" >&2
+  xrandr --display "$DISPLAY" --query >&2 || true
+  exit 1
+fi
+
+exec /usr/bin/sunshine /config/sunshine.conf

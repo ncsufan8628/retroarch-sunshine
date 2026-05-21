@@ -116,6 +116,8 @@ If the logs say `Unable to create virtual mouse` or `Unable to create virtual ke
 If `xinput list` does not show Moonlight/Sunshine virtual input devices while a client is connected, `/dev/input` is not visible to the dummy Xorg server or the container's udev service is not running.
 Replace `eventX` with the event device created for a Sunshine keyboard or mouse; its udev properties should include `ID_INPUT=1` and either `ID_INPUT_KEYBOARD=1` or `ID_INPUT_MOUSE=1`.
 
+The container waits for `DUMMY0 connected` before starting Sunshine. If Sunshine still logs `Unable to find display or encoder during startup`, check `docker exec retroarch-sunshine xrandr --display :0 --query` and `/config/logs/xorg.log`.
+
 Also make sure `SUNSHINE_ENCODER` is added as a Variable, not a Label. In Unraid's generated command it should appear as `-e 'SUNSHINE_ENCODER'='nvenc'`, not `-l 'SUNSHINE_ENCODER'='nvenc'`.
 
 If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:

@@ -54,9 +54,11 @@ COPY rootfs/ /
 RUN chmod +x /usr/local/bin/container-start \
              /usr/local/bin/seed-config \
              /usr/local/bin/start-udev \
+             /usr/local/bin/start-dbus \
              /usr/local/bin/start-pulseaudio \
              /usr/local/bin/start-xorg-dummy \
-             /usr/local/bin/start-openbox
+             /usr/local/bin/start-openbox \
+             /usr/local/bin/start-sunshine
 
 VOLUME ["/config", "/roms"]
 
