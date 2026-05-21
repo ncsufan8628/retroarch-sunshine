@@ -84,6 +84,16 @@ When adding this container directly in Unraid's Docker UI, map both devices:
 `/dev/dri` is for hardware encoding. `/dev/uinput` is what Sunshine uses to create virtual keyboard, mouse, and gamepad devices for Moonlight input.
 The `/dev/input` mapping allows the container's dummy Xorg display to discover and read those virtual input devices.
 
+In Unraid, add `/dev/input` as a **Path**, not as a Device. It must be a live bind mount so newly-created `/dev/input/event*` nodes appear inside the container.
+
+Add these Extra Parameters so Docker's device cgroup allows dynamic input event devices:
+
+```sh
+--device-cgroup-rule='c 13:* rwm' --device-cgroup-rule='c 10:223 rwm'
+```
+
+If input still does not appear, temporarily test with `--privileged`. If privileged mode fixes it, the remaining issue is Docker device isolation rather than Sunshine or RetroArch.
+
 If `/dev/uinput` does not exist on the Unraid host, load it before starting the container:
 
 ```sh
@@ -105,6 +115,8 @@ docker logs retroarch-sunshine | grep -i input
 If the logs say `Unable to create virtual mouse` or `Unable to create virtual keyboard`, `/dev/uinput` is still missing or inaccessible inside the container.
 If `xinput list` does not show Moonlight/Sunshine virtual input devices while a client is connected, `/dev/input` is not visible to the dummy Xorg server or the container's udev service is not running.
 Replace `eventX` with the event device created for a Sunshine keyboard or mouse; its udev properties should include `ID_INPUT=1` and either `ID_INPUT_KEYBOARD=1` or `ID_INPUT_MOUSE=1`.
+
+Also make sure `SUNSHINE_ENCODER` is added as a Variable, not a Label. In Unraid's generated command it should appear as `-e 'SUNSHINE_ENCODER'='nvenc'`, not `-l 'SUNSHINE_ENCODER'='nvenc'`.
 
 If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:
 

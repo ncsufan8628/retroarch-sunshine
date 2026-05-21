@@ -3,6 +3,9 @@ services:
     devices:
       - /dev/dri:/dev/dri
       - /dev/uinput:/dev/uinput
+    device_cgroup_rules:
+      - "c 13:* rwm"
+      - "c 10:223 rwm"
     volumes:
       - /dev/input:/dev/input
     group_add:
