@@ -1,55 +1,36 @@
-FROM lscr.io/linuxserver/retroarch:latest
-
-ARG SUNSHINE_VERSION
+FROM lizardbyte/sunshine:latest-ubuntu-24.04
 
 LABEL org.opencontainers.image.source="https://github.com/ncsufan8628/retroarch-sunshine"
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      wget \
-      curl \
-      jq \
+      retroarch \
+      retroarch-assets \
+      retroarch-joypad-autoconfig \
+      libretro-core-info \
+      dbus-x11 \
+      x11-xserver-utils \
+      mesa-utils \
+      pulseaudio-utils \
       udev \
-      fuse \
-      libfuse2t64 \
-      libnotify4 \
-      libxtst6 \
-      libnss3 \
-      libasound2t64 \
-      libgbm1 \
-      libxcb-xinerama0 \
-      libxrandr2 \
-      libxfixes3 \
-      libx11-xcb1 \
-      libva2 \
-      libvdpau1 \
-      libayatana-appindicator3-1 && \
+      jq \
+      curl \
+      ca-certificates && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget -O /tmp/sunshine.AppImage \
-    "https://github.com/LizardByte/Sunshine/releases/latest/download/sunshine.AppImage" && \
-    chmod +x /tmp/sunshine.AppImage && \
-    cd /opt && \
-    /tmp/sunshine.AppImage --appimage-extract && \
-    mv /opt/squashfs-root /opt/sunshine && \
-    ln -sf /opt/sunshine/AppRun /usr/bin/sunshine && \
-    rm -f /tmp/sunshine.AppImage && \
-    /usr/bin/sunshine --version || true
-
-RUN mkdir -p /etc/s6-overlay/s6-rc.d/sunshine \
-             /etc/s6-overlay/s6-rc.d/user/contents.d && \
-    echo "longrun" > /etc/s6-overlay/s6-rc.d/sunshine/type && \
-    touch /etc/s6-overlay/s6-rc.d/user/contents.d/sunshine && \
-    cat > /etc/s6-overlay/s6-rc.d/sunshine/run <<'EOF' && \
-    chmod +x /etc/s6-overlay/s6-rc.d/sunshine/run
-#!/usr/bin/with-contenv bash
-
+RUN mkdir -p /config/sunshine /config/retroarch /roms && \
+    cat > /usr/local/bin/start-retroarch-sunshine <<'EOF' && \
+    chmod +x /usr/local/bin/start-retroarch-sunshine
+#!/usr/bin/env bash
 set -e
 
 SUNSHINE_DIR="/config/sunshine"
 APPS_FILE="$SUNSHINE_DIR/apps.json"
 
-mkdir -p "$SUNSHINE_DIR"
+mkdir -p "$SUNSHINE_DIR" /config/retroarch /roms
 
 if [ ! -f "$APPS_FILE" ]; then
   cat > "$APPS_FILE" <<'APPS'
@@ -58,7 +39,7 @@ if [ ! -f "$APPS_FILE" ]; then
   "apps": [
     {
       "name": "RetroArch",
-      "cmd": "/usr/bin/retroarch",
+      "cmd": "retroarch --config /config/retroarch/retroarch.cfg",
       "detached": [],
       "image-path": ""
     }
@@ -67,5 +48,7 @@ if [ ! -f "$APPS_FILE" ]; then
 APPS
 fi
 
-exec /usr/bin/sunshine "$SUNSHINE_DIR"
+exec sunshine "$SUNSHINE_DIR"
 EOF
+
+CMD ["/usr/local/bin/start-retroarch-sunshine"]
