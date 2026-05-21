@@ -4,6 +4,12 @@ set -euo pipefail
 mkdir -p "$XDG_RUNTIME_DIR" /config /roms /run/udev /var/log/supervisor
 chmod 700 "$XDG_RUNTIME_DIR"
 
+if [ "${XORG_DRIVER:-auto}" = "virtualgl" ]; then
+  export VGL_DISPLAY="${VGL_DISPLAY:-:0}"
+  export CAPTURE_DISPLAY="${CAPTURE_DISPLAY:-:1}"
+  export DISPLAY="$CAPTURE_DISPLAY"
+fi
+
 /usr/local/bin/seed-config
 
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/retroarch-sunshine.conf

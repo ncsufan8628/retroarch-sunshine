@@ -5,6 +5,8 @@ LABEL org.opencontainers.image.source="https://github.com/ncsufan8628/retroarch-
 
 ENV DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:0 \
+    VGL_DISPLAY=:0 \
+    CAPTURE_DISPLAY=:1 \
     PULSE_SERVER=unix:/tmp/pulse/native \
     XDG_RUNTIME_DIR=/tmp/runtime-root \
     SCREEN_WIDTH=1920 \
@@ -43,6 +45,7 @@ RUN apt-get update && \
       supervisor \
       udev \
       vainfo \
+      virtualgl \
       x11-xserver-utils \
       xserver-xorg-core \
       xserver-xorg-input-libinput \

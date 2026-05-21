@@ -152,6 +152,7 @@ docker logs retroarch-sunshine | grep -i "Found H.264 encoder"
 `h264_nvenc [nvenc]` means Sunshine encoding is on NVIDIA; remaining CPU load is usually RetroArch/Xorg rendering. Use `XORG_DRIVER=nvidia` and verify with `glxinfo -B`.
 When `XORG_DRIVER=nvidia`, the image defaults Sunshine to `capture=nvfbc` because the headless NVIDIA NoScanout X screen has no physical RandR output for X11 capture to enumerate. Other Xorg modes default to `capture=x11` so Sunshine does not probe PipeWire/portal capture inside the container.
 The capture value is `nvfbc`, not `nfbc`.
+If NVIDIA NoScanout starts but Sunshine cannot capture it, use `XORG_DRIVER=virtualgl`. This starts a NVIDIA Xorg server on `VGL_DISPLAY` for GPU rendering and a separate capture Xorg server on `CAPTURE_DISPLAY` for Sunshine. RetroArch is launched through VirtualGL so OpenGL rendering happens on NVIDIA while Sunshine captures the virtual X11 display.
 
 ## Resolution
 

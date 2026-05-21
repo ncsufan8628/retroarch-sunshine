@@ -76,6 +76,8 @@ fi
 
 if [ -n "${SUNSHINE_CAPTURE:-}" ]; then
   set_sunshine_config capture "$(normalize_capture "$SUNSHINE_CAPTURE")"
+elif [ "${XORG_DRIVER:-auto}" = "virtualgl" ]; then
+  set_sunshine_config capture x11
 elif [ "${XORG_DRIVER:-auto}" = "nvidia" ]; then
   set_sunshine_config capture nvfbc
 else

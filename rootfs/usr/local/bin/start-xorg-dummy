@@ -199,7 +199,7 @@ EOF
 
 exec_xorg() {
   local config="$1"
-  cleanup_xorg_lock
+  cleanup_xorg_lock "$DISPLAY"
   exec Xorg "$DISPLAY" \
     -config "$config" \
     -logfile /config/logs/xorg.log \
@@ -212,10 +212,25 @@ exec_xorg() {
 
 start_xorg() {
   local config="$1"
-  cleanup_xorg_lock
+  cleanup_xorg_lock "$DISPLAY"
   Xorg "$DISPLAY" \
     -config "$config" \
     -logfile /config/logs/xorg.log \
+    -noreset \
+    -nolisten tcp \
+    +extension GLX \
+    +extension RANDR \
+    +extension RENDER
+}
+
+start_xorg_on_display() {
+  local display="$1"
+  local config="$2"
+  local logfile="$3"
+  cleanup_xorg_lock "$display"
+  Xorg "$display" \
+    -config "$config" \
+    -logfile "$logfile" \
     -noreset \
     -nolisten tcp \
     +extension GLX \
@@ -268,7 +283,8 @@ log_nvidia_xorg_candidates() {
 }
 
 cleanup_xorg_lock() {
-  local display_number="${DISPLAY#:}"
+  local display="${1:-$DISPLAY}"
+  local display_number="${display#:}"
   display_number="${display_number%%.*}"
   local lock_file="/tmp/.X${display_number}-lock"
   local socket_file="/tmp/.X11-unix/X${display_number}"
@@ -277,12 +293,38 @@ cleanup_xorg_lock() {
     local lock_pid
     lock_pid="$(tr -d ' ' < "$lock_file" 2>/dev/null || true)"
     if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then
-      echo "Xorg display ${DISPLAY} is already owned by pid ${lock_pid}" >&2
+      echo "Xorg display ${display} is already owned by pid ${lock_pid}" >&2
       return 0
     fi
     echo "Removing stale Xorg lock ${lock_file}" >&2
     rm -f "$lock_file" "$socket_file"
   fi
+}
+
+run_virtualgl_xorg() {
+  local gpu_display="${VGL_DISPLAY:-:0}"
+  local capture_display="${CAPTURE_DISPLAY:-:1}"
+  write_nvidia_config
+  write_dummy_config
+
+  start_xorg_on_display "$gpu_display" /tmp/xorg-nvidia.conf /config/logs/xorg-gpu.log &
+  local gpu_pid="$!"
+
+  for _ in $(seq 1 100); do
+    if xdpyinfo -display "$gpu_display" >/dev/null 2>&1; then
+      break
+    fi
+    if ! kill -0 "$gpu_pid" 2>/dev/null; then
+      wait "$gpu_pid"
+    fi
+    sleep 0.1
+  done
+
+  start_xorg_on_display "$capture_display" /tmp/xorg-dummy.conf /config/logs/xorg.log &
+  local capture_pid="$!"
+
+  trap 'kill "$gpu_pid" "$capture_pid" 2>/dev/null || true; wait "$gpu_pid" "$capture_pid" 2>/dev/null || true' TERM INT EXIT
+  wait -n "$gpu_pid" "$capture_pid"
 }
 
 nvidia_xorg_bus_id() {
@@ -309,6 +351,9 @@ case "${XORG_DRIVER:-auto}" in
   nvidia)
     write_nvidia_config
     exec_xorg /tmp/xorg-nvidia.conf
+    ;;
+  virtualgl)
+    run_virtualgl_xorg
     ;;
   modeset)
     write_modeset_config
