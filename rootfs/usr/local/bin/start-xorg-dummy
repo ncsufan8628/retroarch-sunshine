@@ -8,7 +8,30 @@ for _ in $(seq 1 50); do
   sleep 0.1
 done
 
-cat > /tmp/xorg-dummy.conf <<EOF
+write_input_config() {
+  cat <<'EOF'
+Section "InputClass"
+    Identifier "libinput keyboard catchall"
+    MatchIsKeyboard "on"
+    Driver "libinput"
+EndSection
+
+Section "InputClass"
+    Identifier "libinput pointer catchall"
+    MatchIsPointer "on"
+    Driver "libinput"
+EndSection
+
+Section "InputClass"
+    Identifier "libinput touchpad catchall"
+    MatchIsTouchpad "on"
+    Driver "libinput"
+EndSection
+EOF
+}
+
+write_dummy_config() {
+  cat > /tmp/xorg-dummy.conf <<EOF
 Section "ServerFlags"
     Option "AutoAddDevices" "true"
     Option "AllowMouseOpenFail" "true"
@@ -39,30 +62,106 @@ Section "Screen"
     EndSubSection
 EndSection
 
-Section "InputClass"
-    Identifier "libinput keyboard catchall"
-    MatchIsKeyboard "on"
-    Driver "libinput"
-EndSection
-
-Section "InputClass"
-    Identifier "libinput pointer catchall"
-    MatchIsPointer "on"
-    Driver "libinput"
-EndSection
-
-Section "InputClass"
-    Identifier "libinput touchpad catchall"
-    MatchIsTouchpad "on"
-    Driver "libinput"
-EndSection
+$(write_input_config)
 EOF
+}
 
-exec Xorg "$DISPLAY" \
-  -config /tmp/xorg-dummy.conf \
-  -logfile /config/logs/xorg.log \
-  -noreset \
-  -nolisten tcp \
-  +extension GLX \
-  +extension RANDR \
-  +extension RENDER
+write_nvidia_config() {
+  cat > /tmp/xorg-nvidia.conf <<EOF
+Section "ServerFlags"
+    Option "AutoAddDevices" "true"
+    Option "AllowMouseOpenFail" "true"
+    Option "DontVTSwitch" "true"
+EndSection
+
+Section "Files"
+    ModulePath "/usr/lib/x86_64-linux-gnu/nvidia/xorg"
+    ModulePath "/usr/lib/xorg/modules"
+EndSection
+
+Section "Device"
+    Identifier "NvidiaDevice"
+    Driver "nvidia"
+    Option "AllowEmptyInitialConfiguration" "true"
+    Option "UseDisplayDevice" "None"
+    Option "HardDPMS" "false"
+EndSection
+
+Section "Monitor"
+    Identifier "NvidiaMonitor"
+    HorizSync 5.0-1000.0
+    VertRefresh 5.0-200.0
+EndSection
+
+Section "Screen"
+    Identifier "NvidiaScreen"
+    Device "NvidiaDevice"
+    Monitor "NvidiaMonitor"
+    DefaultDepth ${SCREEN_DEPTH}
+    SubSection "Display"
+        Depth ${SCREEN_DEPTH}
+        Virtual ${SCREEN_WIDTH} ${SCREEN_HEIGHT}
+    EndSubSection
+EndSection
+
+$(write_input_config)
+EOF
+}
+
+exec_xorg() {
+  local config="$1"
+  exec Xorg "$DISPLAY" \
+    -config "$config" \
+    -logfile /config/logs/xorg.log \
+    -noreset \
+    -nolisten tcp \
+    +extension GLX \
+    +extension RANDR \
+    +extension RENDER
+}
+
+start_xorg() {
+  local config="$1"
+  Xorg "$DISPLAY" \
+    -config "$config" \
+    -logfile /config/logs/xorg.log \
+    -noreset \
+    -nolisten tcp \
+    +extension GLX \
+    +extension RANDR \
+    +extension RENDER
+}
+
+has_nvidia_xorg_driver() {
+  [ -e /usr/lib/x86_64-linux-gnu/nvidia/xorg/nvidia_drv.so ] || \
+    [ -e /usr/lib/xorg/modules/drivers/nvidia_drv.so ]
+}
+
+case "${XORG_DRIVER:-auto}" in
+  nvidia)
+    write_nvidia_config
+    exec_xorg /tmp/xorg-nvidia.conf
+    ;;
+  dummy)
+    write_dummy_config
+    exec_xorg /tmp/xorg-dummy.conf
+    ;;
+  auto)
+    if has_nvidia_xorg_driver; then
+      echo "NVIDIA Xorg driver found; starting GPU-backed headless Xorg"
+      write_nvidia_config
+      if start_xorg /tmp/xorg-nvidia.conf; then
+        exit 0
+      fi
+      echo "NVIDIA Xorg failed; falling back to dummy Xorg" >&2
+    else
+      echo "NVIDIA Xorg driver not found; starting dummy Xorg"
+    fi
+    write_dummy_config
+    exec_xorg /tmp/xorg-dummy.conf
+    ;;
+  *)
+    echo "Unsupported XORG_DRIVER=${XORG_DRIVER}. Use auto, nvidia, or dummy." >&2
+    exit 1
+    ;;
+esac

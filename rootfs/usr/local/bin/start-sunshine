@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+display_is_ready() {
+  xrandr --display "$DISPLAY" --query 2>/dev/null | grep -Eq ' connected( |$)|current [1-9][0-9]* x [1-9][0-9]*'
+}
+
 for _ in $(seq 1 200); do
-  if xrandr --display "$DISPLAY" --query 2>/dev/null | grep -q '^DUMMY0 connected'; then
+  if display_is_ready; then
     break
   fi
   sleep 0.1
 done
 
-if ! xrandr --display "$DISPLAY" --query 2>/dev/null | grep -q '^DUMMY0 connected'; then
-  echo "Timed out waiting for Xorg dummy display on $DISPLAY" >&2
+if ! display_is_ready; then
+  echo "Timed out waiting for an Xorg display on $DISPLAY" >&2
   xrandr --display "$DISPLAY" --query >&2 || true
   exit 1
 fi

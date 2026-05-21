@@ -3,6 +3,8 @@ services:
     devices:
       - /dev/dri:/dev/dri
       - /dev/uinput:/dev/uinput
+    environment:
+      XORG_DRIVER: auto
     device_cgroup_rules:
       - "c 13:* rwm"
       - "c 10:223 rwm"

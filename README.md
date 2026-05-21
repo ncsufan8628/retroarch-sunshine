@@ -72,6 +72,18 @@ sudo modprobe uinput
 ```
 
 For NVIDIA, run the container with the NVIDIA Container Toolkit and add the appropriate GPU runtime/device settings for your host.
+Set `SUNSHINE_ENCODER=nvenc` to force NVIDIA video encoding. The container also supports `XORG_DRIVER=auto`, `XORG_DRIVER=nvidia`, or `XORG_DRIVER=dummy`.
+`auto` is the default and starts a headless NVIDIA-backed Xorg server when the NVIDIA Xorg driver is visible in the container, otherwise it falls back to the dummy Xorg driver.
+Use `XORG_DRIVER=nvidia` if you want startup to fail instead of silently falling back when GPU-backed Xorg is not available.
+
+To confirm Xorg rendering is GPU-backed rather than Mesa software rendering, run:
+
+```sh
+docker exec retroarch-sunshine glxinfo -B
+docker exec retroarch-sunshine grep -Ei "NVIDIA|DRISWRAST|swrast|GLX" /config/logs/xorg.log
+```
+
+If `glxinfo -B` says `llvmpipe` or the Xorg log says `DRISWRAST`, RetroArch rendering is still CPU-backed even if Sunshine encoding is using NVENC.
 
 ## Unraid template notes
 
@@ -120,9 +132,10 @@ It also includes an XTEST fallback bridge that reads Sunshine passthrough device
 RetroArch is configured with `input_driver = "x"` so keyboard and mouse events delivered through the dummy Xorg session are used by RetroArch.
 RetroArch uses `input_joypad_driver = "udev"` so Moonlight gamepads are read from Sunshine's virtual `/dev/input` devices.
 
-The container waits for `DUMMY0 connected` before starting Sunshine. If Sunshine still logs `Unable to find display or encoder during startup`, check `docker exec retroarch-sunshine xrandr --display :0 --query` and `/config/logs/xorg.log`.
+The container waits for the Xorg display to become queryable before starting Sunshine. If Sunshine still logs `Unable to find display or encoder during startup`, check `docker exec retroarch-sunshine xrandr --display :0 --query` and `/config/logs/xorg.log`.
 
 Also make sure `SUNSHINE_ENCODER` is added as a Variable, not a Label. In Unraid's generated command it should appear as `-e 'SUNSHINE_ENCODER'='nvenc'`, not `-l 'SUNSHINE_ENCODER'='nvenc'`.
+For NVIDIA-backed Xorg rendering, also add `XORG_DRIVER=nvidia` as a Variable. In Unraid's generated command it should appear as `-e 'XORG_DRIVER'='nvidia'`.
 
 If CPU usage is high while streaming, check whether Sunshine fell back to software encoding:
 
@@ -131,6 +144,7 @@ docker logs retroarch-sunshine | grep -i "Found H.264 encoder"
 ```
 
 `libx264 [software]` means CPU encoding. For Intel/AMD hardware encoding, set `SUNSHINE_ENCODER=vaapi` and `SUNSHINE_ADAPTER_NAME` to the correct `/dev/dri/renderD*` node.
+`h264_nvenc [nvenc]` means Sunshine encoding is on NVIDIA; remaining CPU load is usually RetroArch/Xorg rendering. Use `XORG_DRIVER=nvidia` and verify with `glxinfo -B`.
 
 ## Resolution
 

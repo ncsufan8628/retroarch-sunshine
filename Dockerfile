@@ -10,6 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SCREEN_WIDTH=1920 \
     SCREEN_HEIGHT=1080 \
     SCREEN_DEPTH=24 \
+    XORG_DRIVER=auto \
     TZ=Etc/UTC
 
 USER root
