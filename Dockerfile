@@ -58,7 +58,8 @@ RUN chmod +x /usr/local/bin/container-start \
              /usr/local/bin/start-pulseaudio \
              /usr/local/bin/start-xorg-dummy \
              /usr/local/bin/start-openbox \
-             /usr/local/bin/start-sunshine
+             /usr/local/bin/start-sunshine \
+             /usr/local/bin/watch-input-hotplug
 
 VOLUME ["/config", "/roms"]
 

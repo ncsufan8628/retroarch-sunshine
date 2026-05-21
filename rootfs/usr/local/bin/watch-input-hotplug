@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+is_passthrough_present() {
+  libinput list-devices 2>/dev/null | grep -Eq 'Device:[[:space:]]+(Mouse|Keyboard|Touch|Pen) passthrough'
+}
+
+is_xinput_attached() {
+  xinput list --display "$DISPLAY" 2>/dev/null | grep -Eq '(Mouse|Keyboard|Touch|Pen) passthrough'
+}
+
+for _ in $(seq 1 200); do
+  if xinput list --display "$DISPLAY" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.1
+done
+
+while true; do
+  if is_passthrough_present && ! is_xinput_attached; then
+    echo "Sunshine passthrough input exists but Xorg has not attached it; retriggering input hotplug"
+    udevadm control --reload-rules >/dev/null 2>&1 || true
+    udevadm trigger --subsystem-match=input --action=change >/dev/null 2>&1 || true
+    udevadm settle --timeout=2 >/dev/null 2>&1 || true
+  fi
+  sleep 1
+done
