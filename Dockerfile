@@ -12,6 +12,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SCREEN_DEPTH=24 \
     TZ=Etc/UTC
 
+USER root
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
