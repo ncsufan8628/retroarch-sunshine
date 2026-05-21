@@ -37,9 +37,12 @@ RUN apt-get update && \
       udev \
       vainfo \
       x11-xserver-utils \
+      xserver-xorg-core \
+      xserver-xorg-input-libinput \
+      xserver-xorg-video-dummy \
       xauth \
       xdotool \
-      xvfb && \
+      xinput && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -48,7 +51,7 @@ COPY rootfs/ /
 RUN chmod +x /usr/local/bin/container-start \
              /usr/local/bin/seed-config \
              /usr/local/bin/start-pulseaudio \
-             /usr/local/bin/start-xvfb \
+             /usr/local/bin/start-xorg-dummy \
              /usr/local/bin/start-openbox
 
 VOLUME ["/config", "/roms"]

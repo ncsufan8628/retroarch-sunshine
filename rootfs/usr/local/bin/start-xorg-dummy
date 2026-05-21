@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cat > /tmp/xorg-dummy.conf <<EOF
+Section "ServerFlags"
+    Option "AutoAddDevices" "true"
+    Option "AllowMouseOpenFail" "true"
+    Option "DontVTSwitch" "true"
+EndSection
+
+Section "Device"
+    Identifier "DummyDevice"
+    Driver "dummy"
+    VideoRam 256000
+EndSection
+
+Section "Monitor"
+    Identifier "DummyMonitor"
+    HorizSync 5.0-1000.0
+    VertRefresh 5.0-200.0
+EndSection
+
+Section "Screen"
+    Identifier "DummyScreen"
+    Device "DummyDevice"
+    Monitor "DummyMonitor"
+    DefaultDepth ${SCREEN_DEPTH}
+    SubSection "Display"
+        Depth ${SCREEN_DEPTH}
+        Modes "${SCREEN_WIDTH}x${SCREEN_HEIGHT}"
+        Virtual ${SCREEN_WIDTH} ${SCREEN_HEIGHT}
+    EndSubSection
+EndSection
+
+Section "InputClass"
+    Identifier "libinput keyboard catchall"
+    MatchIsKeyboard "on"
+    Driver "libinput"
+EndSection
+
+Section "InputClass"
+    Identifier "libinput pointer catchall"
+    MatchIsPointer "on"
+    Driver "libinput"
+EndSection
+
+Section "InputClass"
+    Identifier "libinput touchpad catchall"
+    MatchIsTouchpad "on"
+    Driver "libinput"
+EndSection
+EOF
+
+exec Xorg "$DISPLAY" \
+  -config /tmp/xorg-dummy.conf \
+  -logfile /config/logs/xorg.log \
+  -noreset \
+  -nolisten tcp \
+  +extension GLX \
+  +extension RANDR \
+  +extension RENDER

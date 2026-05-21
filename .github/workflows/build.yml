@@ -1,6 +1,9 @@
 name: Build RetroArch Sunshine
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
   schedule:
     - cron: "22 9 * * *"
