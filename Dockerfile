@@ -31,7 +31,6 @@ RUN apt-get update && \
       pulseaudio-utils \
       retroarch \
       retroarch-assets \
-      retroarch-joypad-autoconfig \
       supervisor \
       udev \
       vainfo \

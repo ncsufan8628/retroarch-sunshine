@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mkdir -p /config/retroarch /config/retroarch/system /config/retroarch/saves /config/retroarch/states /config/logs
+mkdir -p /config/retroarch \
+         /config/retroarch/autoconfig \
+         /config/retroarch/system \
+         /config/retroarch/saves \
+         /config/retroarch/states \
+         /config/logs
 
 if [ ! -f /config/apps.json ]; then
   cp /usr/local/share/retroarch-sunshine/apps.json /config/apps.json

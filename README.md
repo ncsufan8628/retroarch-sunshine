@@ -21,6 +21,8 @@ The container seeds default files on first start:
 - `/config/apps.json`
 - `/config/retroarch/retroarch.cfg`
 
+Controller autoconfig profiles can be added under `./config/retroarch/autoconfig`.
+
 After the first run you can edit those files on the host and restart the container.
 
 ## Ports
