@@ -7,7 +7,7 @@
   "apps": [
     {
       "name": "RetroArch",
-      "cmd": "retroarch --config /config/retroarch/retroarch.cfg --menu --fullscreen",
+      "cmd": "/usr/local/bin/start-retroarch",
       "detached": [],
       "image-path": "",
       "output": "/config/logs/retroarch.log"

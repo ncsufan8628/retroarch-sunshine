@@ -59,7 +59,8 @@ RUN chmod +x /usr/local/bin/container-start \
              /usr/local/bin/start-xorg-dummy \
              /usr/local/bin/start-openbox \
              /usr/local/bin/start-sunshine \
-             /usr/local/bin/watch-input-hotplug
+             /usr/local/bin/watch-input-hotplug \
+             /usr/local/bin/start-retroarch
 
 VOLUME ["/config", "/roms"]
 

@@ -40,6 +40,17 @@ set_sunshine_config() {
   fi
 }
 
+set_retroarch_config() {
+  local key="$1"
+  local value="$2"
+
+  if grep -q "^${key} =" /config/retroarch/retroarch.cfg; then
+    sed -i "s|^${key} =.*|${key} = \"${value}\"|" /config/retroarch/retroarch.cfg
+  else
+    printf '%s = "%s"\n' "$key" "$value" >> /config/retroarch/retroarch.cfg
+  fi
+}
+
 if [ -n "${SUNSHINE_ENCODER:-}" ]; then
   set_sunshine_config encoder "$SUNSHINE_ENCODER"
 fi
@@ -55,3 +66,5 @@ fi
 if [ ! -f /config/retroarch/retroarch.cfg ]; then
   cp /usr/local/share/retroarch-sunshine/retroarch.cfg /config/retroarch/retroarch.cfg
 fi
+
+set_retroarch_config input_driver x
