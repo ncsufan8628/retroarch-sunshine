@@ -33,7 +33,6 @@ jobs:
           BASE_DIGEST="$(docker buildx imagetools inspect "$BASE_IMAGE" --format '{{json .Manifest.Digest}}' | tr -d '"')"
 
           SUNSHINE_JSON="$(curl -fsSL https://api.github.com/repos/LizardByte/Sunshine/releases/latest)"
-
           SUNSHINE_VERSION="$(echo "$SUNSHINE_JSON" | jq -r '.tag_name')"
 
           SUNSHINE_DEB_URL="$(echo "$SUNSHINE_JSON" | jq -r '
@@ -59,6 +58,7 @@ jobs:
         run: |
           echo "RetroArch digest: ${{ steps.detect.outputs.base_digest }}"
           echo "Sunshine version: ${{ steps.detect.outputs.sunshine_version }}"
+          echo "Image tag: ${{ steps.detect.outputs.image_tag }}"
 
   build:
     needs: detect
@@ -95,7 +95,7 @@ jobs:
           fi
 
       - name: Build and push
-        if: steps.exists.outputs.exists != 'true'
+        if: github.event_name == 'workflow_dispatch' || steps.exists.outputs.exists != 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -109,6 +109,7 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ needs.detect.outputs.image_tag }}
+            ${{ env.IMAGE_NAME }}:manual-${{ github.run_number }}
 
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
