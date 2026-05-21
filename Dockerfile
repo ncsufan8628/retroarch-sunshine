@@ -1,25 +1,32 @@
 FROM lscr.io/linuxserver/retroarch:latest
 
 ARG SUNSHINE_VERSION
-ARG SUNSHINE_DEB_URL
 
 LABEL org.opencontainers.image.source="https://github.com/ncsufan8628/retroarch-sunshine"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       wget \
-      ca-certificates \
+      curl \
       jq \
       udev \
-      pulseaudio-utils \
-      curl && \
-    wget -O /tmp/sunshine.deb "$SUNSHINE_DEB_URL" && \
-    apt-get update && \
-    apt-get install -y /tmp/sunshine.deb && \
-    command -v sunshine && \
-    rm -f /tmp/sunshine.deb && \
-    apt-get clean && \
+      libnotify4 \
+      libxtst6 \
+      libnss3 \
+      libasound2t64 \
+      libgbm1 \
+      libxcb-xinerama0 \
+      libxrandr2 \
+      libxfixes3 \
+      libx11-xcb1 \
+      libva2 \
+      libvdpau1 \
+      libayatana-appindicator3-1 && \
     rm -rf /var/lib/apt/lists/*
+
+RUN wget -O /usr/bin/sunshine \
+    "https://github.com/LizardByte/Sunshine/releases/latest/download/sunshine.AppImage" && \
+    chmod +x /usr/bin/sunshine
 
 RUN mkdir -p /etc/s6-overlay/s6-rc.d/sunshine \
              /etc/s6-overlay/s6-rc.d/user/contents.d && \
@@ -52,5 +59,5 @@ if [ ! -f "$APPS_FILE" ]; then
 APPS
 fi
 
-exec sunshine "$SUNSHINE_DIR"
+exec /usr/bin/sunshine "$SUNSHINE_DIR"
 EOF

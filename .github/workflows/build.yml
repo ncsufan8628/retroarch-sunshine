@@ -20,7 +20,6 @@ jobs:
     outputs:
       base_digest: ${{ steps.detect.outputs.base_digest }}
       sunshine_version: ${{ steps.detect.outputs.sunshine_version }}
-      sunshine_deb_url: ${{ steps.detect.outputs.sunshine_deb_url }}
       image_tag: ${{ steps.detect.outputs.image_tag }}
 
     steps:
@@ -33,25 +32,14 @@ jobs:
           BASE_DIGEST="$(docker buildx imagetools inspect "$BASE_IMAGE" --format '{{json .Manifest.Digest}}' | tr -d '"')"
 
           SUNSHINE_JSON="$(curl -fsSL https://api.github.com/repos/LizardByte/Sunshine/releases/latest)"
+
           SUNSHINE_VERSION="$(echo "$SUNSHINE_JSON" | jq -r '.tag_name')"
-
-          SUNSHINE_DEB_URL="$(echo "$SUNSHINE_JSON" | jq -r '
-            .assets[]
-            | select(.name == "sunshine-ubuntu-24.04-amd64.deb")
-            | .browser_download_url
-          ')"
-
-          if [ -z "$SUNSHINE_DEB_URL" ] || [ "$SUNSHINE_DEB_URL" = "null" ]; then
-            echo "Could not find Sunshine amd64 .deb asset"
-            exit 1
-          fi
 
           IMAGE_TAG="${SUNSHINE_VERSION}-${BASE_DIGEST#sha256:}"
           IMAGE_TAG="${IMAGE_TAG:0:40}"
 
           echo "base_digest=$BASE_DIGEST" >> "$GITHUB_OUTPUT"
           echo "sunshine_version=$SUNSHINE_VERSION" >> "$GITHUB_OUTPUT"
-          echo "sunshine_deb_url=$SUNSHINE_DEB_URL" >> "$GITHUB_OUTPUT"
           echo "image_tag=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Show detected versions
@@ -104,7 +92,6 @@ jobs:
 
           build-args: |
             SUNSHINE_VERSION=${{ needs.detect.outputs.sunshine_version }}
-            SUNSHINE_DEB_URL=${{ needs.detect.outputs.sunshine_deb_url }}
 
           tags: |
             ${{ env.IMAGE_NAME }}:latest
